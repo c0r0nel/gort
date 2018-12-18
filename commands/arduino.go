@@ -11,25 +11,28 @@ import (
 	"github.com/codegangsta/cli"
 )
 
-func uploadParams(board string) (string, string) {
+func uploadParams(board string) (string, string, string) {
 	switch board {
 	case "m328", "uno", "nano", "mini", "ethernet", "fio":
-		return "arduino", "m328p"
+		return "arduino", "m328p", "115200"
 
 	case "m168", "diecimila", "stamp":
-		return "arduino", "m168"
+		return "arduino", "m168", "115200"
 
 	case "mega", "mega1280":
-		return "arduino", "m1280"
+		return "arduino", "m1280", "115200"
 
 	case "mega2560", "megaADK":
-		return "stk500v2", "m2560"
+		return "stk500v2", "m2560", "115200"
 
 	case "leonardo", "robot", "micro", "esplora":
-		return "avr109", "atmega32u4"
+		return "avr109", "atmega32u4", "115200"
+
+	case "oldnano":
+		return "arduino", "m328p", "57600"
 
 	default:
-		return "arduino", "m328p"
+		return "arduino", "m328p", "115200"
 	}
 }
 
@@ -70,7 +73,7 @@ func Arduino() cli.Command {
 				fmt.Println("  gort arduino upload <custom-firmware-filename> <port> [flags]")
 				fmt.Println()
 				fmt.Println("    upload flags:")
-				fmt.Println("      -b < m328 | uno | nano | mini | ethernet | fio | m168 |")
+				fmt.Println("      -b < m328 | uno | nano | oldnano | mini | ethernet | fio | m168 |")
 				fmt.Println("           diecimila | stamp | mega | mega1280 | mega2560 | megaADK |")
 				fmt.Println("           leonardo | robot | micro | esplora >")
 			}
@@ -133,7 +136,7 @@ func Arduino() cli.Command {
 				hexfile := c.Args()[1]
 				port := c.Args()[2]
 				file, _ := ioutil.TempFile(os.TempDir(), "")
-				programmer, part := uploadParams(c.String("board"))
+				programmer, part, baudrate := uploadParams(c.String("board"))
 				defer file.Close()
 				defer os.Remove(file.Name())
 
@@ -147,7 +150,7 @@ func Arduino() cli.Command {
 
 				switch runtime.GOOS {
 				case "darwin", "linux", "windows":
-					cmd := exec.Command("avrdude", fmt.Sprintf("-p%v", part), fmt.Sprintf("-c%v", programmer), fmt.Sprintf("-P%v", port), "-D", fmt.Sprintf("-Uflash:w:%v:i", hexfile))
+					cmd := exec.Command("avrdude", fmt.Sprintf("-p%v", part), fmt.Sprintf("-c%v", programmer), fmt.Sprintf("-P%v", port), fmt.Sprintf("-b%v", baudrate), "-D", fmt.Sprintf("-Uflash:w:%v:i", hexfile))
 					cmd.Stdout = os.Stdout
 					cmd.Stderr = os.Stderr
 					if err := cmd.Run(); err != nil {

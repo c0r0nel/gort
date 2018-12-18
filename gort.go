@@ -1,10 +1,9 @@
 package main
 
 import (
-	"os"
-
+	"github.com/c0r0nel/gort/commands"
 	"github.com/codegangsta/cli"
-	"github.com/hybridgroup/gort/commands"
+	"os"
 )
 
 func main() {
